@@ -1,6 +1,6 @@
 #Part one
 with open("input") as f:
-    horizontal, depth = 0, 0
+    horizontal, depth, aim = 0, 0, 0
     for line in f:
         command, value = line.split()
         if command == "forward":
