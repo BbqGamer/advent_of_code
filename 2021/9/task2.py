@@ -10,9 +10,7 @@ with open("input") as f:
         return neigbours
 
     def isMinima(i, j):
-        if all([matrix[x][y] > matrix[i][j] for x,y in getNeighbours(i,j)]):
-            return True
-        return False
+        return True if all([matrix[x][y] > matrix[i][j] for x,y in getNeighbours(i,j)]) else False
     
     def getMinimas():
         minimas = []
