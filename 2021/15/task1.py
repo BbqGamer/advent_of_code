@@ -1,8 +1,3 @@
-from collections import defaultdict
-
-def h(p):
-    return (x_dest - p[0]) + (y_dest - p[1])
-
 with open("input") as f:
     c = f.read().split("\n")[:-1]
     x_len = len(c)
@@ -13,12 +8,14 @@ with open("input") as f:
     x_dest = x_len * 5 - 1
     y_dest = y_len * 5 - 1
 
-    dists = defaultdict(lambda a: float('inf'))
     best = float('inf')
 
     solver = []
     solver.append({'p': (0,0), "d" : 0})
     visited = set()
+
+    def h(p):
+        return (x_dest - p[0]) + (y_dest - p[1])
 
     while(solver):
         solver = list(filter(lambda a: a['p'] not in visited and a['d'] + h(a['p']) <= best, solver))

@@ -1,19 +1,16 @@
-from collections import defaultdict
-
-def h(p):
-    return (x_dest - p[0]) + (y_dest - p[1])
-
 with open("input") as f:
     c = f.read().split("\n")[:-1]
     x_dest = len(c)-1
     y_dest = len(c[0])-1
     cave = {(x,y): int(c[x][y]) for x in range(x_dest+1) for y in range(y_dest+1)}
-    dists = defaultdict(lambda a: float('inf'))
     best = float('inf')
 
     solver = []
     solver.append({'p': (0,0), "d" : 0})
     visited = set()
+
+    def h(p):
+        return (x_dest - p[0]) + (y_dest - p[1])
 
     while(solver):
         solver = list(filter(lambda a: a['p'] not in visited and a['d'] + h(a['p']) <= best, solver))
