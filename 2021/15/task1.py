@@ -1,3 +1,5 @@
+from heapq import heapify, heappush, heappop
+
 with open("input") as f:
     c = f.read().split("\n")[:-1]
     x_len = len(c)
@@ -11,32 +13,30 @@ with open("input") as f:
     best = float('inf')
 
     solver = []
-    solver.append({'p': (0,0), "d" : 0})
+    heapify(solver)
+    heappush(solver, (0, (0,0)))
+
     visited = set()
 
     def h(p):
         return (x_dest - p[0]) + (y_dest - p[1])
 
     while(solver):
-        solver = list(filter(lambda a: a['p'] not in visited and a['d'] + h(a['p']) <= best, solver))
-        min_i = None
-        min_v = float('inf')
-        for p in range(len(solver)):
-            if solver[p]['d'] < min_v:
-                min_v = solver[p]['d']
-                min_i = p
-        if min_i == None:
-            continue
-        p = solver.pop(min_i)
-        visited.add(p['p'])
-        x, y = p['p']
+        p = heappop(solver)
+        if p == None:
+            break
+        if p[0] >= best:
+            break
+        x, y = p[1]
         N = filter(lambda a: a in cave, [(x+1,y),(x,y+1),(x-1,y),(x,y-1)])
         for n in N:
-            dist = p['d'] + cave[n]
+            dist = p[0] + cave[n]
             if dist + h(n) >= best:
                 continue
             if n == (x_dest, y_dest):
                 best = min(dist, best)
                 continue
-            solver.append({'p': n, 'd':dist})
+            if n not in visited:
+                heappush(solver, (dist,n))
+                visited.add(n)
     print(best)
