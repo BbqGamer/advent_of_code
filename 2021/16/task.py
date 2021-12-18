@@ -1,9 +1,3 @@
-#1. convert from hex to bin
-#2. packets start with 3 (version) + 3 (type ID) headers
-#3. TYPE ID 4 - pad string with 0 until its multiple of 4:
-#   OTHER TYPES - OPERATIONS I = length Type ID, 15 bits is length of subpackets
-
-from collections import deque
 from math import prod
 
 def generatePacket(data):
@@ -14,7 +8,6 @@ def generatePacket(data):
 
 class Parser():
     c = 0
-    stack = deque()
     versionSum = 0
     
     def readData(self, data):                
