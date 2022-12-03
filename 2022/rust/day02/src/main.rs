@@ -1,5 +1,7 @@
 use std::io::{self, Read, Write};
 
+mod tests;
+
 fn main() -> io::Result<()> {
     let mut input = String::new();
     io::stdin().lock().read_to_string(&mut input)?;
