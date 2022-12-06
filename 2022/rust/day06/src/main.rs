@@ -8,7 +8,7 @@ fn main() -> io::Result<()> {
 
     writeln!(io::stdout(), "Part 1: {}", part1(&input))?;
     writeln!(io::stdout(), "Part 2: {}", part2(&input))?;
-
+    
     Ok(())
 }
 
@@ -23,19 +23,6 @@ fn part1(input: &str) -> usize {
     return 0;
 }
 
-fn are_distinct(chars: &[char]) -> bool {
-    let mut distinct = true;
-    for i in 0..chars.len() {
-        for j in i+1..chars.len() {
-            if chars[i] == chars[j] {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
 fn part2(input: &str) -> usize {
     let chars: Vec<char> = input.chars().collect();
     for i in 13..chars.len() {
@@ -45,4 +32,15 @@ fn part2(input: &str) -> usize {
     }
 
     return 0;
+}
+
+fn are_distinct(chars: &[char]) -> bool {
+    let mut set = std::collections::HashSet::new();    
+    for c in chars {
+        if set.contains(c) {
+            return false;
+        }
+        set.insert(c);
+    }
+    return true;
 }
