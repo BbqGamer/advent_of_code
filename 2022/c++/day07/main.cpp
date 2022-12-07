@@ -85,6 +85,14 @@ void calculateSize(Node* root) {
     }
 }
 
+void freeTree(Node* root) {
+    if(root == nullptr) { return; }
+    for(Node* child : root->get_children()) {
+        freeTree(child);
+    }
+    delete root;
+}
+
 int main() {
     std::string input;
 
@@ -132,4 +140,5 @@ int main() {
     }
     std::cout << "Part 2: " << min_size << std::endl;
 
-}
+    freeTree(root);
+}   
