@@ -4,7 +4,7 @@
 #include<map>
 #include<climits>
 #include<memory>
-#include <algorithm>
+#include<algorithm>
 
 enum NodeType {
     Directory,
@@ -18,7 +18,7 @@ private:
     NodeType ntype;
 
     Node* parent;
-    std::vector<Node*> children;
+    std::vector<std::unique_ptr<Node>> children;
 
 public:
     Node(std::string name, Node* parent, NodeType ntype)
@@ -30,22 +30,25 @@ public:
 
     Node* get_parent() { return this->parent;}
     Node* get_child(std::string name) {
-        for(auto child: children) {
-            if(!child->get_name().compare(name)) {
-                return child;
+        for(int i = 0; i < children.size(); i++) {
+            if(!children[i]->get_name().compare(name)) {
+                return children[i].get();
             }
         }
-        return nullptr;
+        return nullptr; //Child not found
     }
 
-    void add_child(Node* child) { this->children.push_back(child);}
+    void add_child(std::string name, NodeType ntype, int size) { 
+        children.push_back(std::make_unique<Node>(name, this, ntype));
+        children.back()->size = size;
+    }
     void set_size(int size) { this->size = size;}
 
     struct Iterator {
-        std::vector<Node*>::iterator it;
-        Iterator(std::vector<Node*>::iterator it) : it(it) {}
+        std::vector<std::unique_ptr<Node>>::iterator it;
+        Iterator(std::vector<std::unique_ptr<Node>>::iterator it) : it(it) {}
         Iterator operator++() { ++it; return *this; }
-        Node* operator*() { return *it; }
+        Node* operator*() { return (*it).get(); }
         bool operator!=(const Iterator& other) { return it != other.it; }
     };
 
@@ -73,19 +76,12 @@ void calculateSize(Node* root) {
     }
 }
 
-void freeTree(Node* root) {
-    if(root == nullptr) { return; }
-    for(Node* child : *root) {
-        freeTree(child);
-    }
-    delete root;
-}
 
 int main() {
     std::string input;
 
-    Node* root = new Node("/", nullptr, Directory);
-    Node* current = root;
+    std::unique_ptr<Node> root = std::make_unique<Node>("/", nullptr, Directory);
+    Node* current = root.get();
 
     std::cin >> input >> input >> input; //Throw away first line
     while(1) {
@@ -102,19 +98,16 @@ int main() {
             }
         } else if (!input.compare("dir")) {
             std::cin >> input;
-            Node* new_dir = new Node(input, current, Directory);
-            current->add_child(new_dir);
+            current->add_child(input, Directory, 0);
         } else {
             int size = std::stoi(input);
             std::cin >> input;
-            Node* new_file = new Node(input, current, File);
-            new_file->set_size(size);
-            current->add_child(new_file);
+            current->add_child(input, File, size);
         }
     }
     
 
-    calculateSize(root);
+    calculateSize(root.get());
     std::cout << "Part 1: " << sizes_below_100000 << std::endl;
 
     int min_size = INT_MAX;
@@ -127,6 +120,4 @@ int main() {
         }
     }
     std::cout << "Part 2: " << min_size << std::endl;
-
-    freeTree(root);
 }   
