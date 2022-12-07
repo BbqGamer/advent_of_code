@@ -4,6 +4,7 @@
 #include<map>
 #include<climits>
 #include<memory>
+#include <algorithm>
 
 enum NodeType {
     Directory,
@@ -13,56 +14,43 @@ enum NodeType {
 class Node {
 private:
     std::string name;
+    int size;
+    NodeType ntype;
+
     Node* parent;
     std::vector<Node*> children;
-    NodeType ntype;
-    int size;
 
 public:
-    Node(std::string name, Node* parent, NodeType ntype) {
-        this->name = name;
-        this->parent = parent;
-        this->ntype = ntype;
-        this->size = 0;
-    }
+    Node(std::string name, Node* parent, NodeType ntype)
+    : name(name), parent(parent), ntype(ntype), size(0) {}
 
-    void add_child(Node* child) {
-        this->children.push_back(child);
-    }
+    std::string get_name() {return this->name;}
+    int get_size() {return this->size;}
+    NodeType get_type() {return this->ntype;}
 
-    void set_size(int size) {
-        this->size = size;
-    }
-
-    Node* get_parent() {
-        return this->parent;
-    }
-
+    Node* get_parent() { return this->parent;}
     Node* get_child(std::string name) {
-        for(Node* child : this->children) {
-            if(!child->name.compare(name)) {
+        for(auto child: children) {
+            if(!child->get_name().compare(name)) {
                 return child;
             }
         }
         return nullptr;
     }
 
-    std::vector<Node*> get_children() {
-        return this->children;
-    }
+    void add_child(Node* child) { this->children.push_back(child);}
+    void set_size(int size) { this->size = size;}
 
-    NodeType get_type() {
-        return this->ntype;
-    }
+    struct Iterator {
+        std::vector<Node*>::iterator it;
+        Iterator(std::vector<Node*>::iterator it) : it(it) {}
+        Iterator operator++() { ++it; return *this; }
+        Node* operator*() { return *it; }
+        bool operator!=(const Iterator& other) { return it != other.it; }
+    };
 
-    int get_size() {
-        return this->size;
-    }
-
-    std::string get_name() {
-        return this->name;
-    }
-
+    Iterator begin() { return Iterator(children.begin());}
+    Iterator end() { return Iterator(children.end());}
 };
 
 std::map<std::string, int> sizes;
@@ -70,7 +58,7 @@ int sizes_below_100000 = 0;
 
 void calculateSize(Node* root) {
     if(root == nullptr) { return; }
-    for(Node* child : root->get_children()) {
+    for(auto child : *root) {
         calculateSize(child);
         root->set_size(root->get_size() + child->get_size());
     }
@@ -87,7 +75,7 @@ void calculateSize(Node* root) {
 
 void freeTree(Node* root) {
     if(root == nullptr) { return; }
-    for(Node* child : root->get_children()) {
+    for(Node* child : *root) {
         freeTree(child);
     }
     delete root;
