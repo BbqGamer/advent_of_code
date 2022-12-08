@@ -93,7 +93,53 @@ fn parse_input(input: &str) -> Vec<Vec<i32>> {
 
 fn part2(input: &str) -> i32 {
     let forrest_map: Vec<Vec<i32>> = parse_input(input);
+    
+    let mut scenic_scores: Vec<Vec<i32>> = vec![vec![1; forrest_map.len()]; forrest_map.len()];
+    for i in 1..forrest_map.len()-1 {
+        for j in 1..forrest_map.len()-1 {
+            scenic_scores[i][j] = get_scenic_score(i, j, &forrest_map);
+        }
+    }
 
-    return -1;
+    scenic_scores.into_iter().flatten().max().unwrap()
 }
 
+fn get_scenic_score(i: usize, j: usize, forrest_map: &Vec<Vec<i32>>) -> i32 {
+    let mut scenic_score: i32 = 1;
+    
+    let mut x: usize = i - 1;
+    let mut viewing_distance: i32 = 1;
+    while x != 0 && forrest_map[x][j] < forrest_map[i][j] {
+        viewing_distance += 1;
+        x -= 1;
+    }
+    scenic_score *= viewing_distance;
+
+    x = i + 1;
+    viewing_distance = 1;
+    while x < forrest_map.len() - 1 && forrest_map[x][j] < forrest_map[i][j] {
+        viewing_distance += 1;
+        x += 1;
+    }
+    scenic_score *= viewing_distance;
+
+
+    let mut y: usize = j - 1;
+    let mut viewing_distance: i32 = 1;
+    while y != 0 && forrest_map[i][y] < forrest_map[i][j] {
+        viewing_distance += 1;
+        y -= 1;
+    }
+    scenic_score *= viewing_distance;
+
+    let mut y: usize = j + 1;
+    let mut viewing_distance: i32 = 1;
+    while y < forrest_map.len() - 1 && forrest_map[i][y] < forrest_map[i][j] {
+        viewing_distance += 1;
+        y += 1;
+    }
+    scenic_score *= viewing_distance;
+
+
+    scenic_score
+}
