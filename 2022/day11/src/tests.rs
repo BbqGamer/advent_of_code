@@ -1,7 +1,7 @@
 #[cfg(test)]
 
 mod tests {
-    use super::super::{part1, part2, Monkey, Operation};
+    use super::super::{part1, part2, Monkey, monkey::Operation};
 
     static INPUT: &str = "Monkey 0:
   Starting items: 79, 98
@@ -74,6 +74,6 @@ Monkey 3:
 
     #[test]
     fn example_part2() {
-        assert_eq!(part2(INPUT), "");
+        assert_eq!(part2(INPUT), 2713310158);
     }
 }

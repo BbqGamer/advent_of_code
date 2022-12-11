@@ -1,5 +1,5 @@
 use std::io::{self, Read, Write};
-use monkey::{Monkey, Operation};
+use monkey::Monkey;
 
 mod monkey;
 mod tests;
@@ -14,17 +14,33 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn part1(input: &str) -> i32 {
-    let monkeys = parse_input(input);
-    for monkey in monkeys {
-        println!("{:?}", monkey.operation);
-    }
-
-    return -1;
+fn part1(input: &str) -> u64 {
+    let mut monkeys = parse_input(input);
+    simulate_monkeys(&mut monkeys, 20, true);
+    monkey_business(&monkeys)
 }
 
-fn part2(input: &str) -> &str {
-    return "not solved yet";
+fn part2(input: &str) -> u64 {
+    let mut monkeys = parse_input(input);
+    simulate_monkeys(&mut monkeys, 10000, false);
+    monkey_business(&monkeys)
+}
+
+fn simulate_monkeys(monkeys: &mut Vec<Monkey>, rounds: i32, relief: bool) {
+    let lcm = least_common_multiple(&monkeys.iter().map(|x| x.test.0).collect::<Vec<u64>>());
+
+    for _ in 0..rounds {
+        for m in 0..monkeys.len() {
+            while !monkeys[m].items.is_empty() {
+
+                let mut new_item = monkeys[m].inspect();
+                new_item = (if relief {new_item / 3} else {new_item}) % lcm;
+
+                let next = monkeys[m].choose_next(new_item);
+                monkeys[next].items.push(new_item);
+            }
+        }
+    }    
 }
 
 fn parse_input(input: &str) -> Vec<Monkey> {
@@ -34,4 +50,29 @@ fn parse_input(input: &str) -> Vec<Monkey> {
     }
 
     monkeys
+}
+
+fn greatest_common_divisor(a : u64, b : u64) -> u64 {
+    let mut a = a;
+    let mut b = b;
+    while b != 0 {
+        let tmp = b;
+        b = a % b;
+        a = tmp;
+    }
+    a
+}
+
+fn least_common_multiple(numbers: &Vec<u64>) -> u64 {
+    let mut lcm = numbers[0];
+    for i in 1..numbers.len() {
+        lcm = lcm * numbers[i] / greatest_common_divisor(lcm, numbers[i]);
+    }
+    lcm
+}
+
+fn monkey_business(monkeys: &Vec<Monkey>) -> u64 {
+    let mut inspections = monkeys.iter().map(|x| x.inspects).collect::<Vec<u64>>();
+    inspections.sort_by(|a, b| b.cmp(a));
+    inspections[0] * inspections[1]
 }
