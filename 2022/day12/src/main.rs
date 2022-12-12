@@ -1,7 +1,7 @@
 use std::{io::{self, Read, Write}, u8, collections::HashSet};
+use itertools::Itertools;
 use std::collections::BinaryHeap;
 use std::cmp::Reverse;
-use itertools::Itertools;
 
 mod tests;
 
@@ -9,8 +9,19 @@ fn main() -> io::Result<()> {
     let mut input = String::new();
     io::stdin().lock().read_to_string(&mut input)?;
 
-    writeln!(io::stdout(), "Part 1: {}", part1(&input))?;
-    writeln!(io::stdout(), "Part 2: {}", part2(&input))?;
+    let data = read_input(&input);
+    let distances = dijkstra(&data.map, data.end, is_max_one_lower);
+
+    writeln!(io::stdout(), "Part 1: {}", distances[data.start.0][data.start.1])?;
+
+    let n = data.map.len();
+    let p2 = (0..n).cartesian_product(0..n)
+            .filter(|(a,b)| data.map[*a][*b] == 'a' as u8)
+            .map(|(a,b)| distances[a][b])
+            .min()
+            .unwrap();
+
+    writeln!(io::stdout(), "Part 2: {}", p2)?;
 
     Ok(())
 }
@@ -22,26 +33,6 @@ struct Data {
     map: Map,
     start: Point,
     end: Point,
-}
-
-fn part1(input: &str) -> usize {
-    let data = read_input(input);
-    let res = dijkstra(&data.map, data.start, is_max_one_higher);
-    res[data.end.0][data.end.1]
-}
-
-fn part2(input: &str) -> usize {
-    let data = read_input(input);
-
-    let distances = dijkstra(&data.map, data.end, is_max_one_lower);
-
-    let n = data.map.len();
-    (0..n).cartesian_product(0..n)
-            .filter(|(a,b)| data.map[*a][*b] == 'a' as u8)
-            .map(|(a,b)| distances[a][b])
-            .min()
-            .unwrap()
-
 }
 
 fn read_input(input: &str) -> Data {
@@ -79,11 +70,12 @@ fn dijkstra(map: &Map, start: Point, filter: FilterFunc) -> Vec<Vec<usize>> {
     let mut distances: Vec<Vec<usize>> = vec![vec![u32::MAX as usize; map[0].len()]; map.len()];
 
     let mut visited: HashSet<(usize, usize)> = HashSet::new();
-    let mut queue = BinaryHeap::new();
-    queue.push(Reverse((0, start)));
+    let mut pq = BinaryHeap::new();
 
-    while !queue.is_empty() {
-        let (distance, point) = queue.pop().unwrap().0;
+    pq.push(Reverse((0, start)));
+
+    while !pq.is_empty() {
+        let (distance, point) = pq.pop().unwrap().0;
         if visited.contains(&point) {
             continue;
         }
@@ -94,7 +86,8 @@ fn dijkstra(map: &Map, start: Point, filter: FilterFunc) -> Vec<Vec<usize>> {
             if visited.contains(&neighbor) {
                 continue;
             }
-            queue.push(Reverse((distance+1, neighbor)));
+
+            pq.push(Reverse((distance + 1, neighbor)));
         }
     }
 
@@ -118,11 +111,6 @@ fn get_neighborhood(map: &Map, (i, j): Point, filter: FilterFunc) -> Vec<Point> 
     }
 
     res
-}
-
-
-fn is_max_one_higher(map: &Map, a: Point, b: Point) -> bool {
-    map[b.0][b.1] as i8 - map[a.0][a.1] as i8 <= 1
 }
 
 fn is_max_one_lower(map: &Map, a: Point, b: Point) -> bool {
