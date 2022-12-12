@@ -14,40 +14,66 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+struct Data {
+    map: Vec<Vec<u8>>,
+    start: (usize, usize),
+    end: (usize, usize),
+}
+
 fn part1(input: &str) -> usize {
     //get from input to two dimensional vector of ascii numbers
-    let mut square = read_input(input);
-    
-    let mut s_i: usize = 0;
-    let mut s_j: usize = 0;
-    let mut e_i: usize = 0;
-    let mut e_j: usize = 0;
+    let data = read_input(input);
+    let res = dijkstra(&data.map, data.start, is_max_one_higher);
+    res[data.end.0][data.end.1]
+}
 
-    //Find 'S' set it to 1 and start DFS
-    for i in 0..square.len() {
-        for j in 0..square[i].len() {
-            if square[i][j] == 'S' as u8 {
-                square[i][j] = 'a' as u8;
-                s_i = i;
-                s_j = j;
-            }
-            if square[i][j] == 'E' as u8 {
-                square[i][j] = 'z' as u8;
-                e_i = i;
-                e_j = j;
+fn part2(input: &str) -> usize {
+    let data = read_input(input);
+
+    let distances = dijkstra(&data.map, data.end, is_max_one_lower);
+
+    let mut minimum: usize = 100000000;
+    for i in 0..data.map.len() {
+        for j in 0..data.map[i].len() {
+            if data.map[i][j] == 'a' as u8 {
+                let res = distances[i][j];
+                if res < minimum {
+                    minimum = res;
+                }
             }
         }
     }
 
-    let res = dijkstra(&square, (s_i, s_j), is_max_one_higher);
-    res[e_i][e_j]
+    minimum
 }
 
-fn read_input(input: &str) -> Vec<Vec<u8>> {
-    input
+fn read_input(input: &str) -> Data {
+    let mut map: Vec<Vec<u8>> = input
         .lines()
         .map(|line| line.as_bytes().to_vec())
-        .collect()
+        .collect();
+    
+    let mut start = (0, 0);
+    let mut end = (0, 0);
+
+    for i in 0..map.len() {
+        for j in 0..map[i].len() {
+            if map[i][j] == 'S' as u8 {
+                map[i][j] = 'a' as u8;
+                start = (i, j);
+            }
+            if map[i][j] == 'E' as u8 {
+                map[i][j] = 'z' as u8;
+                end = (i, j);
+            }
+        }
+    }
+
+    Data {
+        map,
+        start,
+        end
+    }
 }
 
 type FilterFunc = fn(&Vec<Vec<u8>>, (usize, usize), (usize, usize)) -> bool;
@@ -107,41 +133,4 @@ fn is_max_one_higher(square: &Vec<Vec<u8>>, a: (usize, usize), b: (usize, usize)
 fn is_max_one_lower(square: &Vec<Vec<u8>>, a: (usize, usize), b: (usize, usize)) -> bool {
     let diff = square[b.0][b.1] as i8 - square[a.0][a.1] as i8;
     return diff >= -1;
-}
-
-fn part2(input: &str) -> usize {
-    let mut square = read_input(input);
-    
-    let mut e_i: usize = 0;
-    let mut e_j: usize = 0;
-
-    //Find 'S' set it to 1 and start DFS
-    for i in 0..square.len() {
-        for j in 0..square[i].len() {
-            if square[i][j] == 'S' as u8 {
-                square[i][j] = 'a' as u8;
-            }
-            if square[i][j] == 'E' as u8 {
-                square[i][j] = 'z' as u8;
-                e_i = i;
-                e_j = j;
-            }
-        }
-    }
-
-    let distances = dijkstra(&square, (e_i, e_j), is_max_one_lower);
-
-    let mut minimum: usize = 100000000;
-    for i in 0..square.len() {
-        for j in 0..square[i].len() {
-            if square[i][j] == 'a' as u8 {
-                let res = distances[i][j];
-                if res < minimum {
-                    minimum = res;
-                }
-            }
-        }
-    }
-
-    minimum
 }
