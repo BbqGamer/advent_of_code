@@ -15,10 +15,13 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+type Map = Vec<Vec<u8>>; 
+type Point = (usize, usize);
+
 struct Data {
-    map: Vec<Vec<u8>>,
-    start: (usize, usize),
-    end: (usize, usize),
+    map: Map,
+    start: Point,
+    end: Point,
 }
 
 fn part1(input: &str) -> usize {
@@ -42,7 +45,7 @@ fn part2(input: &str) -> usize {
 }
 
 fn read_input(input: &str) -> Data {
-    let mut map: Vec<Vec<u8>> = input
+    let mut map: Map = input
         .lines()
         .map(|line| line.as_bytes().to_vec())
         .collect();
@@ -70,48 +73,47 @@ fn read_input(input: &str) -> Data {
     }
 }
 
-type FilterFunc = fn(&Vec<Vec<u8>>, (usize, usize), (usize, usize)) -> bool;
+type FilterFunc = fn(&Map, Point, Point) -> bool;
 
-fn dijkstra(square: &Vec<Vec<u8>>, (s_i, s_j): (usize, usize),
-    filter: FilterFunc) -> Vec<Vec<usize>> {
-    let mut distances: Vec<Vec<usize>> = vec![vec![u32::MAX as usize; square[0].len()]; square.len()];
+fn dijkstra(map: &Map, start: Point, filter: FilterFunc) -> Vec<Vec<usize>> {
+    let mut distances: Vec<Vec<usize>> = vec![vec![u32::MAX as usize; map[0].len()]; map.len()];
 
     let mut visited: HashSet<(usize, usize)> = HashSet::new();
     let mut queue = BinaryHeap::new();
-    queue.push(Reverse((0,(s_i, s_j))));
+    queue.push(Reverse((0, start)));
 
     while !queue.is_empty() {
-        let (d,(i, j)) = queue.pop().unwrap().0;
-        if visited.contains(&(i,j)) {
+        let (distance, point) = queue.pop().unwrap().0;
+        if visited.contains(&point) {
             continue;
         }
-        visited.insert((i, j));
-        distances[i][j] = d;
+        visited.insert(point);
+        distances[point.0][point.1] = distance;
 
-        for (n_i, n_j) in get_neighborhood(square, i, j, filter) {
-            if visited.contains(&(n_i, n_j)) {
+        for neighbor in get_neighborhood(map, point, filter) {
+            if visited.contains(&neighbor) {
                 continue;
             }
-            queue.push(Reverse((d+1, (n_i, n_j))));
+            queue.push(Reverse((distance+1, neighbor)));
         }
     }
 
     distances
 }
 
-fn get_neighborhood(square: &Vec<Vec<u8>>, i: usize, j: usize, filter: FilterFunc) -> Vec<(usize, usize)> {
-    let mut res: Vec<(usize, usize)> = Vec::new();
+fn get_neighborhood(map: &Map, (i, j): Point, filter: FilterFunc) -> Vec<Point> {
+    let mut res: Vec<Point> = Vec::new();
 
-    if i > 0 && filter(&square, (i,j), (i-1,j)) {
+    if i > 0 && filter(&map, (i,j), (i-1,j)) {
         res.push((i-1, j));
     }
-    if i < square.len() - 1 && filter(&square, (i,j), (i+1,j)) {
+    if i < map.len() - 1 && filter(&map, (i,j), (i+1,j)) {
         res.push((i+1, j));
     }
-    if j > 0 && filter(&square, (i,j), (i,j-1)) {
+    if j > 0 && filter(&map, (i,j), (i,j-1)) {
         res.push((i, j-1));
     }
-    if j < square[i].len() - 1 && filter(square, (i,j), (i,j+1)) {
+    if j < map[i].len() - 1 && filter(map, (i,j), (i,j+1)) {
         res.push((i, j+1));
     }
 
@@ -119,12 +121,10 @@ fn get_neighborhood(square: &Vec<Vec<u8>>, i: usize, j: usize, filter: FilterFun
 }
 
 
-fn is_max_one_higher(square: &Vec<Vec<u8>>, a: (usize, usize), b: (usize, usize)) -> bool {
-    let diff = square[b.0][b.1] as i8 - square[a.0][a.1] as i8;
-    return diff <= 1;
+fn is_max_one_higher(map: &Map, a: Point, b: Point) -> bool {
+    map[b.0][b.1] as i8 - map[a.0][a.1] as i8 <= 1
 }
 
-fn is_max_one_lower(square: &Vec<Vec<u8>>, a: (usize, usize), b: (usize, usize)) -> bool {
-    let diff = square[b.0][b.1] as i8 - square[a.0][a.1] as i8;
-    return diff >= -1;
+fn is_max_one_lower(map: &Map, a: Point, b: Point) -> bool {
+    map[b.0][b.1] as i8 - map[a.0][a.1] as i8 >= -1
 }
