@@ -1,6 +1,7 @@
 use std::{io::{self, Read, Write}, u8, collections::HashSet};
 use std::collections::BinaryHeap;
 use std::cmp::Reverse;
+use itertools::Itertools;
 
 mod tests;
 
@@ -21,7 +22,6 @@ struct Data {
 }
 
 fn part1(input: &str) -> usize {
-    //get from input to two dimensional vector of ascii numbers
     let data = read_input(input);
     let res = dijkstra(&data.map, data.start, is_max_one_higher);
     res[data.end.0][data.end.1]
@@ -32,19 +32,13 @@ fn part2(input: &str) -> usize {
 
     let distances = dijkstra(&data.map, data.end, is_max_one_lower);
 
-    let mut minimum: usize = 100000000;
-    for i in 0..data.map.len() {
-        for j in 0..data.map[i].len() {
-            if data.map[i][j] == 'a' as u8 {
-                let res = distances[i][j];
-                if res < minimum {
-                    minimum = res;
-                }
-            }
-        }
-    }
+    let n = data.map.len();
+    (0..n).cartesian_product(0..n)
+            .filter(|(a,b)| data.map[*a][*b] == 'a' as u8)
+            .map(|(a,b)| distances[a][b])
+            .min()
+            .unwrap()
 
-    minimum
 }
 
 fn read_input(input: &str) -> Data {
