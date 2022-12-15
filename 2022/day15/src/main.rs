@@ -1,24 +1,8 @@
 use std::io::{self, Read, Write};
-use itertools::Itertools;
+use range_union_find::IntRangeUnionFind;
+use std::ops::RangeInclusive;
 
 mod tests;
-
-type Point = (i32, i32);
-struct Area {
-    middle: Point,
-    closest: Point,
-    radius: i32,
-}
-
-struct Line {
-    start: Point,
-    length: i32,
-}
-
-struct Rectangle {
-    left_upper: Point,
-    right_down: Point,
-}
 
 fn main() -> io::Result<()> {
     let mut input = String::new();
@@ -32,94 +16,32 @@ fn main() -> io::Result<()> {
 
 fn part1(input: &str, row_y: i32) -> i32 {
     let areas = parse_lines(input);
-    
-    //BIG ENOUGH BOUNDARIES
-    let min_x = -500000000;
-    let max_x = 500000000;
 
-    let initial = Line {
-        start: (min_x, row_y),
-        length: max_x - min_x,
-    };
-
-    let mut count = 0;
-    let mut stack = vec![initial];
-
-    while !stack.is_empty() {
-        let line = stack.pop().unwrap();
-
-        let (x, y) = line.start;
-
-        if line_contained(&line, &areas) {
-            count += line.length;
-            continue;
+    let mut range_holder = IntRangeUnionFind::<i32>::new();
+    for area in areas {
+        let _ = range_holder.insert_range(&x_range_from_area(&area, row_y));
+        if area.closest.1 == row_y {
+            let beacon_x = area.closest.0;
+            let _ = range_holder.remove_range(&RangeInclusive::new(beacon_x, beacon_x));
         }
-
-        if line.length == 1 {
-            continue;
+        if area.middle.1 == row_y {
+            let sensor_x = area.middle.0;
+            let _ = range_holder.remove_range(&RangeInclusive::new(sensor_x, sensor_x));
         }
-
-        if !line_crosses(&line, &areas) {
-            continue;
-        }
-
-        let lenght = line.length / 2;
-        stack.push(Line {
-            start: (x, y),
-            length: lenght,
-        });
-
-        stack.push(Line {
-            start: (x + lenght, y),
-            length: line.length - lenght,
-        });
     }
 
-    //Seek for other objects in line
-    let other_objects = areas.iter()
-                             .filter(|area| area.closest.1 == row_y || area.middle.1 == row_y)
-                             .map(|area| area.closest.0).unique().count() as i32;
-    
-    count - other_objects
+    let ranges: Vec<RangeInclusive<i32>> = range_holder.to_collection();
+    ranges.iter().
+        map(|r| r.end() - r.start() + 1).
+        sum::<i32>()
 }
 
-fn line_contained(line: &Line, areas: &Vec<Area>) -> bool {
-    for area in areas {
-        let radius = area.radius;
+fn x_range_from_area(area: &Area, y_pos: i32) -> RangeInclusive<i32> {
+    let diff = (area.middle.1 - y_pos).abs();
+    let start = area.middle.0 - area.radius + diff;
+    let end = area.middle.0 + area.radius - diff;
 
-        let (x, y) = line.start;
-
-        if manhattan_distance((x,y), area.middle) <= radius
-        && manhattan_distance((x + line.length - 1, y), area.middle) <= radius {
-            return true;
-        }
-    }
-    return false;
-}
-
-fn line_crosses(line: &Line, areas: &Vec<Area>) -> bool {
-    for area in areas {
-        let radius = area.radius;
-
-        let (x, y) = line.start;
-
-        if manhattan_distance((x,y), area.middle) <= radius {
-            return true;  
-        } 
-
-        if manhattan_distance((x + line.length - 1, y), area.middle) <= radius {
-            return true;
-        }
-
-        if area.middle.0 < x || area.middle.0 > x + line.length {
-            continue;
-        }
-
-        if (area.middle.1 - y).abs() <= radius {
-            return true;
-        }
-    }
-    return false;
+    RangeInclusive::new(start, end)
 }
 
 fn part2(input: &str, limit: i32) -> i128 {
@@ -164,6 +86,18 @@ fn part2(input: &str, limit: i32) -> i128 {
     }
 
     return -1;
+}
+
+type Point = (i32, i32);
+struct Area {
+    middle: Point,
+    closest: Point,
+    radius: i32,
+}
+
+struct Rectangle {
+    left_upper: Point,
+    right_down: Point,
 }
 
 fn rectangle_contained(rectangle: &Rectangle, areas: &Vec<Area>) -> bool {

@@ -2,7 +2,7 @@
 
 mod tests {
 
-    use super::super::{part1, part2, rectangle_contained, Rectangle, Area};
+    use super::super::{part1, part2, rectangle_contained, Rectangle, Area, x_range_from_area};
 
     static INPUT: &str = "Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 Sensor at x=9, y=16: closest beacon is at x=10, y=16
@@ -29,12 +29,6 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3";
         assert_eq!(part2(INPUT, 20), 56000011);
     }
 
-    // #[test]
-    // fn parse_data_test() {
-    //     let inp: &str = "Sensor at x=20, y=-1: closest beacon is at x=-15, y=3";
-        
-    // }
-
     #[test]
     fn test_quare_contained() {
         assert_eq!(rectangle_contained(&Rectangle {left_upper: (-2, -2), right_down: (2,2)}, &vec![Area{
@@ -54,5 +48,18 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3";
             closest: (2,2),
             radius: 4
         }]), false);
+    }
+
+    #[test]
+    fn check_x_range_from_area() {
+        let a = Area {
+            middle: (1,1),
+            radius: 4,
+            closest: (4, 1)
+        };
+
+        let r = x_range_from_area(&a, 0);
+        assert_eq!(*r.start(), -2);
+        assert_eq!(*r.end(), 4);
     }
 }
