@@ -1,4 +1,5 @@
 use std::io::{self, Read, Write};
+use itertools::Itertools;
 
 mod tests;
 
@@ -31,8 +32,10 @@ fn main() -> io::Result<()> {
 
 fn part1(input: &str, row_y: i32) -> i32 {
     let areas = parse_lines(input);
-    let min_x = -20000000;
-    let max_x = 20000000;
+    
+    //BIG ENOUGH BOUNDARIES
+    let min_x = -500000000;
+    let max_x = 500000000;
 
     let initial = Line {
         start: (min_x, row_y),
@@ -56,7 +59,6 @@ fn part1(input: &str, row_y: i32) -> i32 {
             continue;
         }
 
-        //if crosses
         if !line_crosses(&line, &areas) {
             continue;
         }
@@ -73,20 +75,12 @@ fn part1(input: &str, row_y: i32) -> i32 {
         });
     }
 
-    //get list of unique closest beacons from all areas
-    let mut beacons = vec![];
-    for area in areas {
-        if !beacons.contains(&area.closest) {
-            beacons.push(area.closest);
-        }
-    }
-    for beacon in beacons {
-        if beacon.1 == row_y {
-            count -= 1;
-        }
-    }
+    //Seek for other objects in line
+    let other_objects = areas.iter()
+                             .filter(|area| area.closest.1 == row_y || area.middle.1 == row_y)
+                             .map(|area| area.closest.0).unique().count() as i32;
     
-    count
+    count - other_objects
 }
 
 fn line_contained(line: &Line, areas: &Vec<Area>) -> bool {
